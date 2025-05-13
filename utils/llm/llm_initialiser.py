@@ -1,6 +1,6 @@
 #utils\llm\llm_initialiser.py
 
-from threading import Thread
+from threading import Thread, Event
 from queue import Queue
 
 
@@ -11,6 +11,7 @@ from utils.files.file_utils import initialize_directories
 from utils.llm.llm_utils import warm_up_llm_connection
 from utils.audio_face_workers import audio_face_queue_worker
 from utils.llm.chat_utils import load_full_chat_history, build_rolling_history
+from utils.scb import scb_store, SummarizerThread
 
 from config import (
     DEFAULT_VOICE_NAME as VOICE_NAME,
@@ -44,6 +45,8 @@ def initialize_system():
               - audio_queue: the queue for audio data.
               - tts_worker_thread: the thread running the TTS worker.
               - audio_worker_thread: the thread running the audio face worker.
+              - summarizer_thread: the thread running the SCB summarizer.
+              - summarizer_stop_event: the event to stop the SCB summarizer.
     """
     # Initialize directories and hardware interfaces.
     initialize_directories()
@@ -60,6 +63,12 @@ def initialize_system():
     # Start the default animation thread.
     default_animation_thread = Thread(target=default_animation_loop, args=(py_face,))
     default_animation_thread.start()
+
+    # ----------------- SCB Summarizer -----------------
+    summarizer_stop = Event()
+    summarizer_thread = SummarizerThread(stop_event=summarizer_stop)
+    summarizer_thread.start()
+    # --------------------------------------------------
     
     # Create queues for TTS and audio.
     chunk_queue = Queue()
@@ -90,4 +99,6 @@ def initialize_system():
         'audio_queue': audio_queue,
         'tts_worker_thread': tts_worker_thread,
         'audio_worker_thread': audio_worker_thread,
+        'summarizer_thread': summarizer_thread,
+        'summarizer_stop_event': summarizer_stop,
     }

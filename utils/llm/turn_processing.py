@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from queue import Empty
 
 from utils.llm.llm_utils import stream_llm_chunks
+from utils.scb import scb_store
 
 from utils.llm.chat_utils import (
     save_full_chat_history,
@@ -58,13 +59,13 @@ def process_turn(
 ):
     """
     Process a conversation turn by:
-      - Updating the LLM config’s system message (using context from vector DB if enabled).
+      - Updating the LLM config's system message (using context from vector DB if enabled).
       - Flushing the queues or waiting until the system is idle.
       - Streaming the LLM response and updating the conversation history.
       - Saving the updated conversation history (using AI‑specific functions if ai_id is provided).
 
     Args:
-      user_input (str): The user’s message.
+      user_input (str): The user's message.
       chat_history (list): The rolling chat history.
       full_history (list): The full conversation history.
       llm_config (dict): The LLM configuration dictionary.
@@ -98,7 +99,13 @@ def process_turn(
     if pygame.mixer.get_init():
         pygame.mixer.stop()
 
+    # Log user input to SCB before generating response
+    scb_store.append_chat(user_input, actor="user")
+
     full_response = stream_llm_chunks(user_input, chat_history, chunk_queue, config=llm_config)
+
+    # Log AI response
+    scb_store.append({"type": "speech", "actor": "vtuber", "text": full_response})
 
     new_turn = {"input": user_input, "response": full_response}
     chat_history.append(new_turn)

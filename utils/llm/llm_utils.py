@@ -8,6 +8,8 @@ from queue import Queue
 from openai import OpenAI
 
 from utils.llm.sentence_builder import SentenceBuilder
+from utils.scb import scb_store, BridgeCache  # NEW
+from utils.scb.color_text import ColorText # ADDED
 
 
 def warm_up_llm_connection(config):
@@ -59,21 +61,46 @@ def update_ui(token: str):
 def build_llm_payload(user_input, chat_history, config):
     """
     Build the conversation messages and payload from the user input,
-    chat history, and configuration.
-
-    Returns:
-        dict: The payload containing the messages and generation parameters.
+    chat history, and configuration.  (SCB-enhanced)
     """
     system_message = config.get(
         "system_message",
         "You are Mai, speak naturally and like a human might with humour and dryness."
     )
     messages = [{"role": "system", "content": system_message}]
+
+    # ----- SCB context injection -----
+    try:
+        summary = scb_store.get_summary()
+        if summary:
+            messages.append({"role": "system", "content": f"Current summary:\n{summary}"})
+        recent_chat = scb_store.get_recent_chat(3)
+        if recent_chat:
+            messages.append({"role": "system", "content": f"Recent chat:\n{recent_chat}"})
+        bridge_txt = BridgeCache.read()
+        if bridge_txt:
+            messages.append({"role": "system", "content": bridge_txt})
+    except Exception as scb_err:
+        # Fail gracefully – continue without SCB context
+        print(f"[LLM] Warning: SCB context unavailable ({scb_err}). Proceeding without it.")
+    # ---------------------------------
+
+    # Preserve existing rolling history inclusion
     for entry in chat_history:
         messages.append({"role": "user", "content": entry["input"]})
         messages.append({"role": "assistant", "content": entry["response"]})
+
+    # Finally the current user turn
     messages.append({"role": "user", "content": user_input})
-    
+
+    # ---- PRINT FULL PROMPT FOR DEBUGGING ----
+    try:
+        full_prompt_text_for_log = "\n".join([f"{m['role'].upper()}: {m['content']}" for m in messages])
+        print(f"\n{ColorText.PURPLE}--- LLM PROMPT START ---\n{full_prompt_text_for_log}\n--- LLM PROMPT END ---{ColorText.RESET}\n")
+    except Exception as e:
+        print(f"{ColorText.YELLOW}[LLM PROMPT LOGGING ERROR] Could not print full prompt: {e}{ColorText.RESET}")
+    # -----------------------------------------
+
     payload = {
         "messages": messages,
         "max_new_tokens": 4000,
