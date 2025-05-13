@@ -1,6 +1,7 @@
 import threading
 import time
 import os
+from typing import Optional
 
 from utils.scb.scb_store import scb_store
 from utils.scb.color_text import ColorText
@@ -27,7 +28,7 @@ class SummarizerThread(threading.Thread):
         min_salience: float = DEFAULT_SUMMARY_MIN_SALIENCE,
         keep_last_n: int = DEFAULT_SUMMARY_KEEP_LAST_N,
         debug: bool = DEFAULT_SUMMARIZER_DEBUG,
-        stop_event: threading.Event | None = None,
+        stop_event: Optional[threading.Event] = None,
     ):
         super().__init__(daemon=True)
         self.interval = interval

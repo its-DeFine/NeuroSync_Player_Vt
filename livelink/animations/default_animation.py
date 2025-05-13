@@ -6,12 +6,18 @@ import time
 import socket
 import pandas as pd
 from threading import Event
+import os
+import logging
 
 from livelink.connect.livelink_init import FaceBlendShape, UDP_IP, UDP_PORT
 from livelink.animations.blending_anims import blend_animation_start_end
 from livelink.animations.blending_anims import default_animation_state, blend_animation_start_end
 
+# Configure basic logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 def load_animation(csv_path):
+    logging.info(f"Attempting to load animation from: {csv_path}")
     data = pd.read_csv(csv_path)
 
     data = data.drop(columns=['Timecode', 'BlendshapeCount'])
@@ -24,7 +30,9 @@ def load_animation(csv_path):
 # ==================== DEFAULT ANIMATION SETUP ====================
 
 # Path to the default animation CSV file
-ground_truth_path = r"livelink/animations/default_anim/default.csv"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ground_truth_path = os.path.join(SCRIPT_DIR, 'default_anim', 'default.csv')
+logging.info(f"Constructed absolute path for default animation: {ground_truth_path}")
 
 # Load the default animation data
 default_animation_data = load_animation(ground_truth_path)

@@ -11,7 +11,7 @@ from livelink.connect.pylivelinkface import PyLiveLinkFace, FaceBlendShape
 logging.basicConfig(level=logging.INFO)
 
 
-UDP_IP = "172.22.80.1" # Updated for WSL host connection
+UDP_IP = "host.docker.internal" # Updated for WSL host connection, now using host.docker.internal for containerized app
 UDP_PORT = 11111
 
 def create_socket_connection():
