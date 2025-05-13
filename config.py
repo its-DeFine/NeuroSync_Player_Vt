@@ -1,17 +1,24 @@
 # config.py
 import os
+import dotenv  # NEW
 
-USE_LOCAL_LLM = True
+# -------------------------------------------------------------------
+# Load .env file (if present) early so all subprocesses/modules see env vars
+# -------------------------------------------------------------------
+
+dotenv.load_dotenv()
+
+USE_LOCAL_LLM = False
 USE_STREAMING = True
 LLM_API_URL = "http://127.0.0.1:5050/generate_llama"
 LLM_STREAM_URL = "http://127.0.0.1:5050/generate_stream"
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "YOUR-KEY-GOES-HERE")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY","")
 
 MAX_CHUNK_LENGTH = 500
 FLUSH_TOKEN_COUNT = 300
 
-DEFAULT_VOICE_NAME = 'bf_isabella'
-USE_LOCAL_AUDIO = True
+DEFAULT_VOICE_NAME = 'Alice'
+USE_LOCAL_AUDIO = False
 LOCAL_TTS_URL = "http://127.0.0.1:8000/generate_speech" 
 USE_COMBINED_ENDPOINT = False
 

@@ -20,8 +20,11 @@ voices = {
     "Lily": "pFZP5JQG7iQjIQuC4Bku",
     "Bill": "pqHfZKP75CvOlQylNhV4",
 }
+import os
+from dotenv import load_dotenv
 
-XI_API_KEY = "YOUR-ELEVENLABS-API-KEY"  # Replace with your actual ElevenLabs API key
+load_dotenv()
+XI_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
 def get_voice_id_by_name(name):
     return voices.get(name)
